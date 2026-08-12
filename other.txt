@@ -1,0 +1,3 @@
+- Lack of support for partition table filtering
+- Stored reserved names on FAT, e.g. CON, PRN, ...
+- Directory names starting with a dot are implicitly hidden

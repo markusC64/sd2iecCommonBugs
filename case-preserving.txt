@@ -1,0 +1,80 @@
+Bug Report: Filesystem not case-preserving, breaks compatibility with CMD HD and software relying on exact case
+
+Category: Filesystem Compatibility / Data Integrity
+Severity: High (breaks software, causes data transfer issues)
+Reproducibility: 100% for 8.3-representable filenames
+Status: Known issue, fix requires substantial architectural changes
+
+Description:
+The SD2IEC firmware does not preserve the case of filenames when storing to or reading from the FAT filesystem on the SD card. Filenames that can be represented in the 8.3 format (short filenames) are affected, as the implicit three-character extension (file type) is part of the comparison. This breaks compatibility when transferring files between SD2IEC and case-sensitive systems like CMD HD.
+
+Steps to Reproduce (outside an image):
+
+    Create a file with a mixed-case name on the SD card via SD2IEC:
+    text
+
+SAVE"0:Foo",8
+
+List the directory to see the case may be altered:
+text
+
+LOAD"$",8
+LIST
+
+Attempt to rename a file changing only case:
+text
+
+OPEN 15,8,15,"R0:foo=Foo"
+
+    (Fails or does nothing)
+
+Expected Behavior:
+
+    Filenames should retain their original case when stored and retrieved
+
+    Renames that only change case should work correctly
+
+    Files copied between SD2IEC and CMD HD should maintain identical names
+
+Actual Behavior:
+
+    Filenames are often converted to uppercase
+
+    Case-only renames fail silently
+
+    Software like C64 OS fails when copying to CMD HD due to case mismatch
+
+Impact:
+    Breaks software operation (C64 OS, others expecting exact case)
+    Prevents case-only renames - common administrative operation
+    Data transfer incompatibility between SD2IEC and case-sensitive systems
+    Loss of metadata integrity - original filename casing is part of the data
+
+Root Cause:
+The underlying FAT filesystem implementation (Chan FATFS) does not preserve case for short filenames (8.3 format). The SD2IEC application layer does not compensate for this limitation and doesn't provide proper case mapping between CBM DOS and FAT conventions.
+
+Technical Challenge:
+Fixing this issue requires coordinated changes at multiple levels:
+
+    FAT layer modifications to properly handle case preservation, possibly requiring LFN (Long File Name) support
+
+    CBM DOS to FAT name mapping layer to maintain case consistency
+
+    Rename operation logic to handle case-only changes correctly
+
+    Backward compatibility considerations for existing SD cards
+
+Workaround:
+
+    Use only uppercase filenames when compatibility with CMD HD is needed
+
+    Avoid case-sensitive operations when transferring files between systems
+
+Notes:
+Requires multiple changes. Cf. commits 
+ec9b3f7 Fix rename
+f721b7c Fix parsing rename
+45557a8 Fix f_rename
+[366cef5 Make it compile again]
+700beef Better check for valid LFNs
+9c903d0 Fix FatFS

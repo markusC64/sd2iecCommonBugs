@@ -1,0 +1,37 @@
+Bug Report: Single-character directory names corrupt DNP image directory entries
+
+Category: DNP Image Handling / Directory Corruption
+Severity: High (breaks navigation, may cause data loss)
+Reproducibility: 100%
+
+Description:
+When creating a directory inside a DNP (CMD HD) image with a name consisting of only one character (e.g., "A", "1", or "X"), the generated directory entry header becomes corrupted. This results in a malformed directory listing when viewing the parent directory, often displaying garbage characters, incorrect file types, or causing incomplete listings.
+
+Steps to Reproduce:
+
+    Mount a DNP image
+
+    Create a single-character directory and enter it:
+    @"md:f"
+    @"cd:f"
+
+    List the directory:
+    @$
+
+    Observe corrupted output.
+
+Expected Behavior:
+An empty well formed directory should be listed.
+
+Actual Behavior:
+The directory listing becomes corrupted.
+
+Impact:
+- User has to repair image with hex editor or use a firmware that allows changing the header
+- Breaks C64 OS
+
+Workaround:
+Avoid using single-character directory names in DNP images.
+
+Notes:
+Commit 716915333499c32854ad35051224ebbe218ec17f fixes that bug in my repository.

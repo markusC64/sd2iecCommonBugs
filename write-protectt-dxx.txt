@@ -1,0 +1,31 @@
+**Bug Report: Write protection flag ignored in Dxx images**
+
+**Category:** Image Handling / File Access  
+**Severity:** High (can lead to data loss)  
+**Reproducibility:** 100%
+
+**Description:**  
+The write protection flag of files inside D64, D71, and D81 disk images is not honored by the firmware. Files marked as write-protected within the image can be overwritten or deleted.
+
+**Steps to Reproduce:**
+1. Mount a D64 image containing a file with the write-protect flag set.
+2. Try to delete it.
+
+**Expected Behavior:**  
+Error 62, "FILE WRITE PROTECT ON" should be returned.
+
+**Actual Behavior:**  
+The operation proceeds without error, and the write-protected file is deleted.
+
+**Impact:**
+- Data loss due to unintended overwriting of protected files
+- Incompatibility with original 1541/1571/1581 behavior
+- Potential corruption of disk images
+
+**Workaround:**
+- Mount images as read-only at the filesystem level if supported
+- Avoid modifying images containing write-protected files
+
+**Notes:**
+Cf. Commit 426b01a Obey writeprotect within Dxx images, but
+before that commit, infrastructure has been changed.

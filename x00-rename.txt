@@ -1,0 +1,40 @@
+Bug Report: .x00 container header offset ignored, exposing header as disk data
+
+Category: Image Handling / Data Corruption
+Severity: High to Grave (causes silent data corruption on sd card)
+Reproducibility: 100%
+
+Description:
+The firmware may lose track of the .x00 container format, forgetting to account for the file header offset. When this occurs, sector read operations return data from the beginning of the file—including the .x00 header—instead of from the correct offset where the actual disk image data begins. This results in the C64 receiving corrupted sector content.
+
+Steps to Reproduce (outside an image):
+
+new
+10 ?"ok"
+@"xe+
+@"xe4
+save"bsod-test",8
+@"xe2
+@"r:a=bsod-test
+
+Expected Behavior:
+Consistent behaviour with the p00 extension
+
+Actual Behavior:
+The p00 is renamed to a.prg - so wehave a .prg file that actually has a x00 header.
+
+Impact:
+    Silent Data Corruption: The C64 receives completely wrong sector data without any error indication.
+
+    Software Crashes: Programs relying on specific sector content will fail unpredictably.
+
+    Intermittent Nature: The bug may appear and disappear based on usage patterns, making it difficult to diagnose.
+
+Root Cause:
+Flawed state management in the firmware's file container layer. The internal pointer that tracks the current read offset within a .x00 file can be incorrectly reset to zero or not be adjusted for the header after certain operations.
+
+Workaround:
+   None
+
+Notes:
+The other way round should also be possible - but untested: An x00 file without that header.

@@ -1,0 +1,40 @@
+Bug Report: GEOS boot failure from write-protected media due to stuck error state in GEOS Speeder
+
+Category: Fastloader / GEOS Compatibility
+Severity: High (breaks booting from write-protected media)
+Reproducibility: 100% when booting GEOS from write-protected SD card
+
+Description:
+When attempting to boot GEOS from a write-protected SD card (or image), the GEOS Speeder implementation in the firmware enters an infinite loop or fails to proceed. In contrast, a real 1581 with a write-protected diskette boots GEOS without issues. The root cause is that the GEOS Speeder error state is not cleared after a write attempt to the write-protected medium, causing subsequent operations to hang.
+
+Steps to Reproduce:
+
+    Prepare a write-protected SD card (or a write-protected image on the SD card) containing a bootable GEOS disk image (e.g., a D64 or D81 image with GEOS).
+
+    Attempt to boot GEOS from that image.
+
+    Observe that the boot process hangs in an infinite loop or fails with an error.
+
+Expected Behavior:
+GEOS should boot successfully from the write-protected medium, just as it does from a write-protected 1581 diskette.
+
+Actual Behavior:
+The boot process fails, often with an infinite loop or a freeze. The GEOS Speeder error state remains set after a failed write attempt (e.g., when GEOS tries to write to the disk during boot for configuration or caching), and this uncleared error causes all subsequent Speeder operations to fail.
+
+Impact:
+
+    GEOS cannot boot from write-protected SD cards or images, limiting the use of read-only media for distribution or archival.
+
+    Incompatibility with original hardware behavior, where write-protected disks are perfectly bootable (GEOS may write to disk only if needed, but should handle write-protection gracefully).
+
+Root Cause:
+The GEOS Speeder implementation does not reset its internal error state after a write error (such as a write-protect error). This causes the Speeder to remain in an error state, and all subsequent Speeder commands (including reads) fail, leading to a boot failure.
+
+Workaround:
+
+    Boot GEOS from a writable medium.
+
+    If using a write-protected image, temporarily remove write protection during boot, then re-enable it (not always practical).
+
+Notes:
+This bug is specific to the GEOS Speeder implementation in the SD2IEC firmware. A real 1541/1571/1581 handles write-protection during boot by properly reporting the error and allowing the system to continue (GEOS may fall back to alternative behaviors). The fix involves ensuring that the GEOS Speeder error state is cleared appropriately after any error, or that write-protection errors do not leave the Speeder in a stuck state. Modern firmware forks may have addressed this issue by improving the GEOS Speeder's error handling.

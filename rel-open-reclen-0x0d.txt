@@ -1,0 +1,41 @@
+Bug: REL file open with record length 0x0d (13) fails
+
+Description:
+When attempting to open a RELative file with a record length of 13 (decimal),
+the firmware incorrectly strips the final 0x0d byte from the command buffer,
+treating it as a terminating carriage return (which is typical for BASIC
+commands like LOAD or SAVE) instead of as a valid record length parameter.
+
+Affected operations:
+- OPEN 1,8,4,"FILENAME,L," + CHR$(13)
+- Any REL file open where the record length parameter is 13 (0x0d)
+
+Expected behavior:
+The file should be opened with a record length of 13 bytes. The filename
+should remain "FILENAME" and the record length should be parsed as 13.
+
+Actual behavior:
+The command parser strips the final 0x0d byte before parsing the command,
+resulting in an incomplete or malformed command. The record length parameter
+is lost, and the file open fails or behaves unpredictably.
+
+Impact:
+Users cannot create or open REL files with record length 13 using the standard
+BASIC pattern "filename,L," + CHR$(reclen). This is particularly problematic
+because record length 13 is a common default in some applications.
+
+Root cause:
+The generic command parser in fileops.c unconditionally strips trailing 0x0d
+characters from command_buffer for compatibility with how BASIC sends certain
+commands (e.g., LOAD "NAME" + CHR$(13)). However, this logic does not account
+for the REL file open syntax, where a trailing 0x0d can be a legitimate data
+value (the record length).
+
+Reproduction steps:
+1. Connect to a Commodore computer with an SD2IEC device.
+2. Issue the command: OPEN 1,8,4,"TEST,L," + CHR$(13)
+3. Attempt to write to or read from the opened REL file.
+4. Observe that the file is not opened correctly (error or unexpected behavior).
+
+Workaround:
+Use a record length other than 13.

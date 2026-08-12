@@ -1,0 +1,51 @@
+**Bug Report: Duplicate and empty filenames allowed, breaking filesystem integrity**
+
+**Category:** Filesystem Integrity / Data Loss  
+**Severity:** **GRAVE** (violates fundamental filesystem guarantees)  
+**Reproducibility:** 100% with knowledge of the bug
+
+**Description:**  
+The firmware fails to enforce basic filesystem integrity rules, allowing multiple files with identical names to exist in the same directory and even permitting the creation of files with empty names (the null string, ε). This completely undermines the foundational principle of unique filenames within a directory.
+
+**Steps to Reproduce:**
+
+Inside or outside an image:
+
+1. **Duplicate Filenames:**
+   ```
+   SAVE"TEST{SHIFT SPACE}",8
+   SAVE"TEST{SHIFT SPACE}",8
+   ```
+   Both commands succeed, leaving two distinct files with the same name in the directory.
+
+2. **Empty Filename:**
+   ```
+   SAVE"{SHIFT SPACE}",8
+   SAVE"{SHIFT SPACE}",8
+   ```
+
+Since shift space is the end of name mark which is used to pad the name, the first is equal to "TEST" and the second is the empty filename.
+
+**Expected Behavior:**
+- The second SAVE should fail with error 63, "FILE EXISTS".
+- Creating a file with an empty name should be impossible.
+
+**Actual Behavior:**
+- Both files are created without error. Which file is accessed by subsequent operations is undefined and may depend on internal ordering.
+- Files with empty names can be created, leading to invisible entries and potential data loss.
+
+**Impact:**
+- **Data Loss Guaranteed:** Accessing a filename that has duplicates leads to undefined behavior; one file may overwrite another, or the directory may become corrupted.
+- **Invisible Files:** Empty-named files are effectively hidden and may be overwritten accidentally.
+- **Filesystem Corruption:** The directory structure is no longer reliable, and external tools (PC, etc.) may interpret the duplicate or empty entries incorrectly.
+- **Breaks All Assumptions:** Any software relying on unique filenames (including copy utilities, file managers, and the operating system itself) will malfunction.
+
+**Root Cause:**
+The firmware does not validate the uniqueness of a filename before creating a new file and does not enforce basic naming rules (non-empty strings). This is a direct violation of both CBM DOS and FAT filesystem specifications.
+
+**Workaround:**
+- None. Users must avoid triggering these bugs, but they can be stumbled upon accidentally.
+- Regular integrity checks of the SD card on a PC are advised if any unusual behavior occurs.
+
+**Notes:**
+Variations possible, like some letters after SHIFT space.

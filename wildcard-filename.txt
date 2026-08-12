@@ -1,0 +1,53 @@
+Bug Report: Wildcard characters allowed in filenames, breaking pattern matching
+
+Category: Filesystem Integrity / Naming Rules
+Severity: **GRAVE** (violates fundamental filesystem guarantees)
+Reproducibility: 100% when explicitly using wildcards
+
+Description:
+The firmware incorrectly allows the wildcard characters * and ? to be used within newly created filenames. According to CBM DOS conventions, these characters are reserved exclusively for pattern matching in directory operations and must be prohibited in actual filenames. A real 1541 only accepts a wildcard in a filename if and only if the operation is an overwrite (@) and the file already exists; it is never allowed when creating a new file.
+
+Steps to Reproduce:
+
+    In an empty directory or image, create a file with a wildcard character in its name:
+    text
+
+SAVE"@0:foo*",8
+
+(The @ is interpreted as "overwrite" but, since no file exists, it should still fail.)
+
+List the directory to confirm the file was created:
+text
+
+LOAD"$",8
+LIST
+
+    The listing will incorrectly show a file named foo*.
+
+Expected Behavior:
+The SAVE command should fail with an error (e.g., "ILLEGAL FILENAME" or similar), as wildcard characters are not permitted in new filenames. A 1541 would only allow a wildcard in the filename if the file already existed and the overwrite flag (@) was used.
+
+Actual Behavior:
+The file is created successfully even though no matching file pre-exists. Subsequent operations using pattern matching (e.g., LOAD"foo*",8) may exhibit undefined behavior, such as matching the wrong file or failing to match at all.
+
+Impact:
+
+    Breaks Pattern Matching: Directory patterns like * or ? can no longer be reliably used, as they may match or exclude files with literal wildcards in their names.
+
+    File Management Issues: Deleting or renaming files with wildcards may require unusual syntax or become impossible through standard commands.
+
+    Deviation from True Hardware: The firmware behavior diverges from authentic 1541 operation, breaking compatibility for software that relies on correct wildcard semantics.
+
+Root Cause:
+The firmware lacks proper validation of filenames against reserved characters. It does not enforce the rule that wildcards are only permitted in an overwrite context when the target file already exists.
+
+Workaround:
+
+    Avoid using * and ? in filenames.
+
+    If such a file is created, consider renaming it via a PC or using low-level commands to delete it.
+
+Notes:
+This bug undermines the standard semantics of wildcards and can lead to confusing and dangerous situations. Modern firmware forks have addressed this by implementing proper filename validation that rejects wildcard characters at the point of file creation unless the exact 1541 overwrite conditions are met.
+
+And error codes for save with wildcard are also wrong.

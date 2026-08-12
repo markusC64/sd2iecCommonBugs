@@ -1,0 +1,48 @@
+Bug: D82/D80 partition type string corrupted in directory listing
+
+Description:
+When entering a D82 or D80 partition image (which acts as a subdirectory)
+and loading the partition directory via @"$=P", the displayed file type
+of the partition itself is corrupted or shows garbage characters.
+
+Affected operations:
+- @"CD:TEST.D82" (change into D82 partition)
+- @"$=P" (load partition directory)
+
+Expected behavior:
+The partition should be listed with a proper type indicator, e.g., "D82"
+or "DIR" in the directory listing.
+
+Actual behavior:
+The type string for the partition entry is corrupted because the firmware
+performs an out-of-bounds access when retrieving the type name from the
+internal type string table.
+
+Impact:
+The directory listing becomes visually confusing. While the partition itself
+remains usable, the corrupted type information makes it difficult for users
+to identify the partition type or verify that the CD command succeeded.
+
+Root cause:
+The firmware's type string table does not have a valid entry for D80/D82
+partition types in the context of the $"=P" directory display. The code
+attempts to access a type string index that is out of valid range,
+resulting in garbage data being displayed.
+
+Reproduction:
+1. Have a D80 or D82 partition image on the SD card (e.g., "TEST.D82").
+   Note: Some firmware versions allow creating such an image with
+   @"N:TEST.D82,01", but this is not universally supported.
+2. Enter the partition: @"CD:TEST.D82"
+3. Load the partition directory: @"$=P"
+4. Observe the corrupted type string next to the partition entry.
+
+Workaround:
+None. The partition can still be accessed, but the type display remains
+incorrect.
+
+Notes:
+This bug only affects firmware versions that have D80/D82 support. It is
+not present in upstream sd2iec (which lacks this support). The out-of-bounds
+access occurs because the partition type is not properly registered in the
+type name lookup table used for directory listings.

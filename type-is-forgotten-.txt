@@ -1,0 +1,38 @@
+**Bug Report: File type misidentification with leading-dot filenames due to FAT SFN/LFN inconsistency**
+
+**Category:** Filesystem Handling / File Type Detection  
+**Severity:** High to grave (breaks software, x00 handling might be wrongly supressed)
+**Reproducibility:** 100% with specific filename patterns
+
+**Description:**  
+When saving a file with a leading dot in the filename (e.g., `".foo.l"`), the SD2IEC firmware may incorrectly identify or lose track of the file type. This occurs due to an inconsistency between the generated Short File Name (SFN) and Long File Name (LFN) entries in the FAT filesystem, which confuses the firmware's file type detection logic.
+
+**Steps to Reproduce:**  (outside an image)
+
+1. Save a file with a leading dot and an extension - preferably in a mode that uses p00 files:
+   ```
+   SAVE"0:.foo.l",8
+   ```
+2. List the directory:
+   ```
+   LOAD"$",8
+   LIST
+   ```
+3. Observe the reported file type; it may be incorrect or missing.
+
+**Expected Behavior:**  
+The file should be saved with the correct name and file type (e.g., `.foo.l` with proper type detection based on the extension).
+
+**Actual Behavior:**  
+The file type may be misreported (e.g., as a different type or no type at all). Additionally, checking the file on a PC may reveal inconsistencies between the SFN and LFN entries in the FAT directory.
+
+**Impact:**
+- Incorrect file type display in directory listings
+- Potential issues when loading or managing affected files
+- Data inconsistency between SD2IEC and other systems (PC, etc.)
+
+**Root Cause:**  
+The firmware's file type detection relies on parsing the filename extension. With leading-dot names, the FAT filesystem's SFN/LFN handling may generate inconsistent entries (e.g., SFN truncation or improper extension mapping), causing the firmware to misinterpret the extension.
+
+**Notes:**  
+This bug highlights a subtle interaction between FAT filesystem conventions and the firmware's file type logic. Modern firmware forks may address this by improving FAT name parsing and ensuring consistent SFN/LFN generation. Users experiencing this issue should verify file integrity on other systems and consider firmware updates if available.

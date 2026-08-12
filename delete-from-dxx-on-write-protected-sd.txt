@@ -1,0 +1,28 @@
+Bug Report: Directory corruption when deleting files from write-protected Dxx images
+
+Category: Image Handling / Filesystem Integrity
+Severity: Normal (causes directory inconsistency)
+Reproducibility: 100% under described conditions
+
+Description:
+When attempting to delete a file from a write-protected Dxx (D64/D71/D81) image, the operation may return an error (as expected), but still modify the directory structure. This leaves the image in an inconsistent state.
+
+Steps to Reproduce:
+
+    Mount a write-protected Dxx image (SD card read-only or image file write-protected).
+
+    Attempt to delete a file from the image.
+
+    Check the directory listing and free block count after the operation.
+
+Expected Behavior:
+The delete operation should fail with an appropriate error (e.g., write protect error), and the directory should remain completely unchanged—the file entry should still be present, and the free block count should not increase.
+
+Actual Behavior:
+Although an error is returned, the directory may be altered: the file entry might be removed or marked as deleted, and the free block count may incorrectly increase. The image is left in a corrupted state.
+
+Impact:
+    Fooling user and software
+
+Notes:
+This bug might manifest differently across firmware variants but centers on incomplete rollback after a failed write operation. The core issue is that the directory is modified in memory before the write protection check fully prevents the change from being committed, leaving the image in an inconsistent state. Modern firmware forks address this by ensuring atomic operations or proper transaction rollback.

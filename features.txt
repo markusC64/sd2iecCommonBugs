@@ -1,0 +1,10 @@
+- Simple fast creation of DNP images (thierer already had added D64, D71 & D81 simple creation)
+- Fast format support added
+- Add set-attribute command
+- lock support
+- eh (hide) support
+- r-h support
+- soft write protection added
+- write lock of files within Dxx images is respected
+- Fix Geos compatibility for write protected images
+- Ultimate 64 / C64 Ultimate compatible encoding of filenames added
