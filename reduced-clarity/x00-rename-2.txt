@@ -1,0 +1,11 @@
+Let's say you are using XE2, always create .x00 file wrappers for new files you create. 
+
+Make a SEQ file and call it "myfile". You end up with a file called myfile.s00 and the filename "myfile"
+(in PETSCII) is also embedded inside the .s00 header. So far that's expected. The then rename myfile to 
+something else like, "holidays". Check the SD Card on a PC, and it's stilled "myfile.s00", and "holidays" 
+is only set inside the .s00 header. In my opinion, an attempt should be made to update the wrapper's filename too.
+
+What's worse, if you create a second file and call it "myfile" again, and then rename it to something like 
+"family" you end up with myfile.s00 (the original) and myfile.s01 (the new one), and you can't tell which is "holidays" 
+and which is "family" without a hex editor.
+

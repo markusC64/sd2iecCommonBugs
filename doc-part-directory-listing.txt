@@ -1,0 +1,52 @@
+Bug: README incorrectly states partition type "FAT" for $=P
+
+Description:
+The sd2iec README (or documentation) states that the partition
+directory ($=P) lists all partitions with type "FAT". In practice,
+the firmware has returned "NAT" (Native) since 2008.
+
+Affected documentation:
+- README.md or similar documentation files
+- Section describing the $=P (partition directory) command
+
+Documentation says:
+"All partitions are listed with type 'FAT', although this could change
+to 'NAT' later for compatibility."
+
+Actual behavior (from commit history):
+commit 219c0abe8d876a4569852e7d1f0abdc3349905fc
+Author: Jim Brain <brain@jbrain.com>
+Date:   Thu May 15 00:54:44 2008 -0500
+
+    Use NAT partition type
+
+    Change our improvised FAT partition type in the partition directory
+    listing to NAT for improved CMD compatibility.
+
+The firmware has been returning "NAT" since this commit (2008),
+not "FAT".
+
+Impact:
+- Users reading the documentation expect to see "FAT" but see "NAT"
+  instead. This has been the case for over 15 years.
+- The documentation is inconsistent with the actual firmware behavior.
+- This can cause confusion, especially for users of C64 OS or other
+  software that may rely on specific type strings.
+
+Root cause:
+The documentation was written based on an early version of the firmware
+and was never updated when the behavior changed in 2008.
+
+Fix:
+Update the README to reflect the actual behavior. For example:
+"All partitions are listed with type 'NAT' for native (FAT) partitions,
+or with the appropriate type for disk images (e.g., '41', '71', '81')."
+
+Notes:
+This is a documentation bug, not a code bug. However, incorrect
+documentation can be just as problematic as incorrect code, as it
+leads to misunderstandings and compatibility issues.
+
+The "FAT" type was never present in any released version of the
+firmware – it only exists in the documentation. The change to "NAT"
+was made in 2008 for improved CMD compatibility.
